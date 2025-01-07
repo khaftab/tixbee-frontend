@@ -65,16 +65,29 @@ const config = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
         },
         meteor: {
-          "0%": { transform: "rotate(240deg) translateX(0)", opacity: "1" },
-          "70%": { opacity: "1" },
+          "0%": {
+            transform: "rotate(240deg) translateX(0)",
+            opacity: "1",
+          },
+          "70%": {
+            opacity: "1",
+          },
           "100%": {
             transform: "rotate(240deg) translateX(-500px)",
             opacity: "0",
@@ -89,16 +102,28 @@ const config = {
           },
         },
         marquee: {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(calc(-100% - var(--gap)))" },
+          from: {
+            transform: "translateX(0)",
+          },
+          to: {
+            transform: "translateX(calc(-100% - var(--gap)))",
+          },
         },
         "marquee-vertical": {
-          from: { transform: "translateY(0)" },
-          to: { transform: "translateY(calc(-100% - var(--gap)))" },
+          from: {
+            transform: "translateY(0)",
+          },
+          to: {
+            transform: "translateY(calc(-100% - var(--gap)))",
+          },
         },
         rainbow: {
-          "0%": { "background-position": "0%" },
-          "100%": { "background-position": "200%" },
+          "0%": {
+            "background-position": "0%",
+          },
+          "100%": {
+            "background-position": "200%",
+          },
         },
       },
       animation: {
@@ -111,7 +136,6 @@ const config = {
         rainbow: "rainbow var(--speed, 2s) infinite linear",
       },
       fontFamily: {
-        // sans: ["var(--font-sans)", ...fontFamily.sans],
         cal: ["Cal Sans"],
         "inter-light": ["Inter Light", "sans-serif"],
         "inter-medium": ["Inter Medium", "sans-serif"],

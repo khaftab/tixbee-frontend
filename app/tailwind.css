@@ -113,3 +113,20 @@
 .faded-bg {
   @apply backdrop-blur-[2px] bg-gradient-to-br from-0% from-[hsl(var(--muted))] to-20% to-transparent;
 }
+
+@keyframes textGlow {
+  0% {
+    font-size: small;
+  }
+  50% {
+    font-size: larger;
+  }
+  100% {
+    font-size: large;
+  }
+}
+
+.animate-text-glow {
+  animation: textGlow 2s forwards;
+  /* display: none; */
+}
