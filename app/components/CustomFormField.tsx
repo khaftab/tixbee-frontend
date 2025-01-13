@@ -7,6 +7,7 @@ import { toast } from "~/hooks/use-toast";
 import ImageUploadProgressBar from "./ImageUploadProgressBar";
 import ViewImage from "./ViewImage";
 import RichTextEditor from "./Editor";
+import { undefined } from "zod";
 
 interface FormFieldProps {
   form: UseFormReturn<any>;
@@ -75,6 +76,12 @@ const CustomFormField = ({
         description: "Error uploading image",
         variant: "destructive",
       });
+      form.setValue(name, undefined);
+      form.trigger(name);
+      fetcher.submit(null, { method: "PUT", action: "/api/upload-to-cloudinary" });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // clearing the file input. Otherwise, the same file will not trigger onChange event.
+      }
     }
   }, [fetcher.data, form, name]);
 

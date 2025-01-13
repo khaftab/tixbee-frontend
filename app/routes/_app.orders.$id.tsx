@@ -1,6 +1,5 @@
 import { ActionFunctionArgs, LoaderFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import axios from "~/config/axiosConfig";
 import OrderView from "~/components/OrderView";
 import { handleError } from "~/lib/handleError";
 import { EnvType, OrderResult, User } from "~/types/types";
@@ -15,22 +14,33 @@ export const loader: LoaderFunction = async ({ request, params, context }) => {
   const { HOST } = context.cloudflare.env as EnvType;
   const { id } = params;
   try {
-    const orderResponse = await axios.get(`${HOST}/api/orders/${id}`, {
+    const orderResponse = await fetch(`${HOST}/api/orders/${id}`, {
+      method: "GET",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
 
-    const userResponse = await axios.get(`${HOST}/api/users/user`, {
+    const userResponse = await fetch(`${HOST}/api/users/user`, {
+      method: "GET",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
-
-    return { order: orderResponse.data, user: userResponse.data };
-  } catch (error: any) {
-    console.log(error.response.data);
-    return { order: null, user: null };
+    const orderData = (await orderResponse.json()) as any;
+    const userData = (await userResponse.json()) as any;
+    if (!orderResponse.ok) {
+      return handleError(orderData, orderResponse, { order: null, user: null });
+    }
+    if (!userResponse.ok) {
+      return handleError(userData, userResponse, { order: null, user: null });
+    }
+    return { order: orderData, user: userData };
+  } catch (error) {
+    console.log("Error:", error);
+    return handleError(error, false, { order: null, user: null });
   }
 };
 
@@ -67,24 +77,45 @@ export async function action({ request, context }: ActionFunctionArgs) {
     };
   }
 
+  // try {
+  //   const response = await axios.post(
+  //     `${HOST}/api/payments`,
+  //     {
+  //       token,
+  //       orderId,
+  //       billingInfo,
+  //     },
+  //     {
+  //       headers: {
+  //         Cookie: request.headers.get("Cookie"),
+  //       },
+  //     }
+  //   );
+  //   console.log(response.data);
+  //   return response.data;
+  // } catch (error: any) {
+  //   return handleError(error, { order: null, user: null });
+  // }
+
   try {
-    const response = await axios.post(
-      `${HOST}/api/payments`,
-      {
-        token,
-        orderId,
-        billingInfo,
+    const response = await fetch(`${HOST}/api/payments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
-      {
-        headers: {
-          Cookie: request.headers.get("Cookie"),
-        },
-      }
-    );
-    console.log(response.data);
-    return response.data;
-  } catch (error: any) {
-    return handleError(error, { order: null, user: null });
+      body: JSON.stringify({ token, orderId, billingInfo }),
+    });
+
+    const paymentData = (await response.json()) as any;
+
+    if (!response.ok) {
+      return handleError(paymentData, response, { order: null, user: null });
+    }
+
+    return paymentData;
+  } catch (error) {
+    return handleError(error, false, { order: null, user: null });
   }
 }
 

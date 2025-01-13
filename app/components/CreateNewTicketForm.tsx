@@ -81,7 +81,6 @@ const CreateNewTicketForm = ({ mode, ticket }: TicketFormProps) => {
       description: ticket?.description ?? "",
     },
   });
-  console.log("from erroe", form.formState.errors);
   const handleSubmit = (values: FormValues) => {
     const formData = new FormData();
 

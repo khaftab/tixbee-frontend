@@ -1,6 +1,5 @@
 import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { useLoaderData, useNavigation } from "@remix-run/react";
-import axios from "../config/axiosConfig";
 import TicketList from "~/components/TicketList";
 import Loader from "~/components/Loader";
 import PaginationComponent from "~/components/Pagination";
@@ -24,21 +23,28 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const filterBy = url.searchParams.get("filterBy") || "all";
 
   try {
-    const response = await axios.get(
+    const response = await fetch(
       `${HOST}/api/tickets/category/${category}?sortBy=${sortBy}&sortOrder=${sortOrder}&page=${page}&filterBy=${filterBy}`,
       {
+        method: "GET",
         headers: {
-          Cookie: request.headers.get("Cookie"),
+          "Content-Type": "application/json",
+          Cookie: request.headers.get("Cookie") || "",
         },
       }
     );
+    const ticketData = (await response.json()) as any;
+    if (!response.ok) {
+      return handleError(ticketData, response, { tickets: [], totalTickets: 0, page });
+    }
     return {
-      tickets: response.data.tickets,
-      totalTickets: response.data.totalTickets,
+      tickets: ticketData.tickets,
+      totalTickets: ticketData.totalTickets,
       page,
     };
   } catch (error) {
-    return handleError(error, { tickets: [], totalTickets: 0, page });
+    console.log("Error:", error);
+    return handleError(error, false, { tickets: [], totalTickets: 0, page });
   }
 }
 

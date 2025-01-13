@@ -1,8 +1,7 @@
 import { useActionData, useLoaderData, useOutletContext } from "@remix-run/react";
 import { ActionFunctionArgs, LoaderFunction, redirect } from "@remix-run/cloudflare";
-import axios from "~/config/axiosConfig";
 import { handleError } from "~/lib/handleError";
-import { EnvType, OutletContext, TicketResult } from "~/types/types";
+import { EnvType, CurrentUser, TicketResult } from "~/types/types";
 import ViewTicket from "~/components/ViewTicket";
 import { useToastError } from "~/hooks/useToastError";
 import "react-quill/dist/quill.snow.css";
@@ -19,15 +18,23 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 export const loader: LoaderFunction = async ({ request, params, context }) => {
   const { HOST } = context.cloudflare.env as EnvType;
   const { id } = params;
+
   try {
-    const response = await axios.get(`${HOST}/api/tickets/${id}`, {
+    const response = await fetch(`${HOST}/api/tickets/${id}`, {
+      method: "GET",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
-    return { ticket: response.data };
-  } catch (error: any) {
-    return handleError(error, { ticket: null });
+    const ticketData = (await response.json()) as any;
+    if (!response.ok) {
+      return handleError(ticketData, response, { ticket: null });
+    }
+    return { ticket: ticketData };
+  } catch (error) {
+    console.log("Error:", error);
+    return handleError(error, false, { ticket: null });
   }
 };
 
@@ -37,37 +44,35 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const ticketId = body.get("ticketId");
 
   try {
-    const res = await axios.post(
-      `${HOST}/api/orders`,
-      {
-        ticketId,
+    const response = await fetch(`${HOST}/api/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
-      {
-        headers: {
-          Cookie: request.headers.get("Cookie"),
-        },
-      }
-    );
-    console.log(res.data);
-    if (res.status === 202) {
-      return redirect(`/queue/${res.data.ticketId}`);
+      body: JSON.stringify({ ticketId }),
+    });
+    const ticketData = (await response.json()) as any;
+    if (!response.ok) {
+      return handleError(ticketData, response);
     }
-
-    if (res.status === 206) {
+    if (response.status === 202) {
+      return redirect(`/queue/${ticketData.ticketId}`);
+    }
+    if (response.status === 206) {
       console.log("Redirecting to order page");
-      return redirect(`/orders/${res.data.orderId}`);
-      // if user tries to visit queue page or tries to buy same ticket, while the order is still pending.
+      return redirect(`/orders/${ticketData.orderId}`);
     }
-
-    return redirect(`/orders/${res.data.id}`);
-  } catch (error: any) {
-    return handleError(error);
+    return redirect(`/orders/${ticketData.id}`);
+  } catch (error) {
+    console.log("Error:", error);
+    return handleError(error, false);
   }
 }
 
 const TicketDetails = () => {
   const data = useLoaderData<{ ticket: TicketResult }>();
-  const { currentUser } = useOutletContext<OutletContext>();
+  const { currentUser } = useOutletContext<CurrentUser>();
 
   const actionData = useActionData<typeof action>();
   useToastError(data);

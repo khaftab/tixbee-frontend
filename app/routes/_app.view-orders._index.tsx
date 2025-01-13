@@ -1,6 +1,5 @@
 import { LoaderFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import axios from "~/config/axiosConfig";
 import CustomerOrderList from "~/components/CustomerOrderList";
 import PaginationComponent from "~/components/Pagination";
 import { handleError } from "~/lib/handleError";
@@ -19,19 +18,28 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const sortOrder = url.searchParams.get("sortOrder") || "desc";
   const sortBy = url.searchParams.get("sortBy") || "date";
   const filterBy = url.searchParams.get("filterBy") || "all";
+
   try {
-    const orderResponse = await axios.get(
+    const response = await fetch(
       `${HOST}/api/orders?sortBy=${sortBy}&sortOrder=${sortOrder}&page=${page}&filterBy=${filterBy}`,
       {
+        method: "GET",
         headers: {
-          Cookie: request.headers.get("Cookie"),
+          "Content-Type": "application/json",
+          Cookie: request.headers.get("Cookie") || "",
         },
       }
     );
-    console.log(orderResponse.data.orders);
-    return { orders: orderResponse.data.orders, totalOrders: orderResponse.data.totalOrders, page };
-  } catch (error: any) {
-    return handleError(error, { orders: [], totalOrders: 0, page: 1 });
+
+    const orderData = (await response.json()) as any;
+
+    if (!response.ok) {
+      return handleError(orderData, response, { orders: [], totalOrders: 0, page: 1 });
+    }
+
+    return { orders: orderData.orders, totalOrders: orderData.totalOrders, page };
+  } catch (error) {
+    return handleError(error, false, { orders: [], totalOrders: 0, page: 1 });
   }
 };
 

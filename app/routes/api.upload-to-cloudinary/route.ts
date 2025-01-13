@@ -1,5 +1,4 @@
 import { ActionFunctionArgs } from "@remix-run/cloudflare";
-import axios from "axios";
 import { jsonResponse } from "~/lib/utils";
 import { EnvType } from "~/types/types";
 
@@ -22,16 +21,24 @@ export async function action({ request, context }: ActionFunctionArgs) {
   body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET as string);
 
   try {
-    const result = (await axios.post(
+    // Use fetch to make the request
+    const response = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-      body,
       {
+        method: "POST",
+        body, // Pass the form data directly
         headers: {
-          "Content-Type": "multipart/form-data",
+          Accept: "application/json", // Accept JSON response from Cloudinary
         },
       }
-    )) as any;
-    return jsonResponse({ public_id: result.data.public_id, context: contextOf, status: 201 }, 201);
+    );
+
+    if (!response.ok) {
+      return jsonResponse({ public_id: null, context: null, status: 500 }, 500);
+    }
+
+    const result = (await response.json()) as any;
+    return jsonResponse({ public_id: result.public_id, context: contextOf, status: 201 }, 201);
   } catch (error) {
     console.error("Cloudinary Upload Error:", error);
     return jsonResponse({ public_id: null, context: null, status: 500 }, 500);

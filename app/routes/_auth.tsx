@@ -2,24 +2,29 @@ import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Outlet, useLoaderData } from "@remix-run/react";
 import DotPattern from "~/components/DotPattern";
 import Navbar from "~/components/Navbar";
-import axios from "~/config/axiosConfig";
 import { useToastError } from "~/hooks/useToastError";
 import { handleError } from "~/lib/handleError";
 import { cn } from "~/lib/utils";
-import { EnvType } from "~/types/types";
+import { CurrentUser, EnvType } from "~/types/types";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const { HOST } = context.cloudflare.env as EnvType;
+
   try {
-    const response = await axios.get(`${HOST}/api/users/currentuser`, {
+    const response = await fetch(`${HOST}/api/users/currentuser`, {
+      method: "GET",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
-    console.log(response.data);
-    return response.data;
-  } catch (error) {
-    return handleError(error, { currentUser: null });
+    const data = await response.json();
+    if (!response.ok) {
+      return handleError(data, response, { currentUser: null });
+    }
+    return data as CurrentUser;
+  } catch (error: any) {
+    return handleError(error, false, { currentUser: null });
   }
 }
 

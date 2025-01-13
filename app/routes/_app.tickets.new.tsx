@@ -1,7 +1,6 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/cloudflare";
 import { useActionData, useOutletContext } from "@remix-run/react";
-import axios from "../config/axiosConfig";
-import { EnvType, OutletContext } from "~/types/types";
+import { EnvType, CurrentUser } from "~/types/types";
 import { useToastError } from "~/hooks/useToastError";
 import { handleError } from "~/lib/handleError";
 import NotSignedIn from "~/components/NotSignedIn";
@@ -9,8 +8,9 @@ import { validateAndSanitizeHTML } from "~/lib/validateAndSanitizeHTML";
 import CreateNewTicketForm from "~/components/CreateNewTicketForm";
 import { ticketSchema } from "~/lib/zodValidationSchema";
 import "react-quill/dist/quill.snow.css";
-import crypto from "node:crypto";
+// import crypto from "node:crypto";
 import type { MetaFunction } from "@remix-run/cloudflare";
+import { createSha1Hash } from "~/lib/utils";
 
 export const meta: MetaFunction = () => {
   return [{ title: "TixBee - Create ticket" }];
@@ -36,22 +36,24 @@ const deleteCloudinaryImage = async (
 
   // Create signature
   const signatureString = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
-  const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
+  // const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
+  const signature = await createSha1Hash(signatureString);
 
   try {
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`,
-      {
-        public_id: publicId,
-        timestamp,
-        signature,
-        api_key: apiKey,
-      }
-    );
-    console.log("Cloudinary Delete Response:", response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error("Cloudinary Delete Error:", error.response?.data || error.message);
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ public_id: publicId, timestamp, signature, api_key: apiKey }),
+    });
+    const data = (await response.json()) as any;
+    if (!response.ok) {
+      console.log("Cloudinary error", response);
+    }
+    return data;
+  } catch (error) {
+    console.log("Cloudinary error", error);
   }
 };
 
@@ -87,18 +89,19 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   if (request.method === "PUT") {
     try {
-      await axios.put(
-        `${HOST}/api/tickets/${bodyObject.id}`,
-        {
-          ...data,
-          description: cleanHtml,
+      const response = await fetch(`${HOST}/api/tickets/${bodyObject.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: request.headers.get("Cookie") || "",
         },
-        {
-          headers: {
-            Cookie: request.headers.get("Cookie"),
-          },
-        }
-      );
+        body: JSON.stringify({ ...data, description: cleanHtml }),
+      });
+      const ticketData = (await response.json()) as any;
+      if (!response.ok) {
+        return handleError(ticketData, response);
+      }
+
       if (bodyObject.oldTicketImagePublicId) {
         deleteCloudinaryImage(
           bodyObject.oldTicketImagePublicId,
@@ -118,22 +121,22 @@ export async function action({ request, context }: ActionFunctionArgs) {
       return redirect(`/tickets/${bodyObject.id}`);
     } catch (error) {
       console.log(error);
-      return handleError(error);
+      return handleError(error, false);
     }
   } else if (request.method === "POST") {
     try {
-      await axios.post(
-        `${HOST}/api/tickets`,
-        {
-          ...data,
-          description: cleanHtml,
+      const response = await fetch(`${HOST}/api/tickets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: request.headers.get("Cookie") || "",
         },
-        {
-          headers: {
-            Cookie: request.headers.get("Cookie"),
-          },
-        }
-      );
+        body: JSON.stringify({ ...data, description: cleanHtml }),
+      });
+      const ticketData = (await response.json()) as any;
+      if (!response.ok) {
+        return handleError(ticketData, response);
+      }
       return redirect(`/tickets`);
     } catch (error) {
       console.log(error);
@@ -144,7 +147,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
 export default function CreateTicketRoute() {
   const actionData = useActionData<typeof action>();
-  const { currentUser } = useOutletContext<OutletContext>();
+  const { currentUser } = useOutletContext<CurrentUser>();
 
   useToastError(actionData);
 

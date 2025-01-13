@@ -1,11 +1,10 @@
 import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Outlet, useLoaderData } from "@remix-run/react";
-import axios from "../config/axiosConfig";
 import Footer from "~/components/Footer";
 import Navbar from "~/components/Navbar";
 import { cn } from "~/lib/utils";
 import DotPattern from "~/components/DotPattern";
-import { EnvType } from "~/types/types";
+import { EnvType, CurrentUser } from "~/types/types";
 import { handleError } from "~/lib/handleError";
 import { useToastError } from "~/hooks/useToastError";
 
@@ -14,20 +13,24 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   console.log("from _app.tsx", HOST);
 
   try {
-    const response = await axios.get(`${HOST}/api/users/currentuser`, {
+    const response = await fetch(`${HOST}/api/users/currentuser`, {
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
-    console.log("from _app.tsx", response.data);
-    return response.data;
-  } catch (error) {
-    return handleError(error, { currentUser: null });
+    let data = await response.json();
+    if (!response.ok) {
+      return handleError(data, response, { currentUser: null });
+    }
+    return data as CurrentUser;
+  } catch (error: any) {
+    return handleError(error, false, { currentUser: null });
   }
 }
 
 export default function SomeParent() {
-  const data = useLoaderData<typeof loader>();
+  const data = useLoaderData<CurrentUser>();
   useToastError(data);
   console.log("from _app.tsx", data);
 

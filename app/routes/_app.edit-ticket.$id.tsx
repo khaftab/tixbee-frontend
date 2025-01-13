@@ -1,7 +1,6 @@
 import { LoaderFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import CreateNewTicketForm from "~/components/CreateNewTicketForm";
-import axios from "~/config/axiosConfig";
 import { handleError } from "~/lib/handleError";
 import { EnvType, TicketResult } from "~/types/types";
 import "react-quill/dist/quill.snow.css";
@@ -14,16 +13,23 @@ export const meta: MetaFunction = () => {
 export const loader: LoaderFunction = async ({ request, params, context }) => {
   const { HOST } = context.cloudflare.env as EnvType;
   const { id } = params;
-  console.log("ID:", id);
+
   try {
-    const response = await axios.get(`${HOST}/api/tickets/${id}`, {
+    const response = await fetch(`${HOST}/api/tickets/${id}`, {
+      method: "GET",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
-    return { ticket: response.data };
-  } catch (error: any) {
-    return handleError(error, { ticket: null });
+    const ticketData = (await response.json()) as any;
+    if (!response.ok) {
+      return handleError(ticketData, response, { ticket: null });
+    }
+    return { ticket: ticketData };
+  } catch (error) {
+    console.log("Error:", error);
+    return handleError(error, false, { ticket: null });
   }
 };
 

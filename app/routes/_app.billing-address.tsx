@@ -2,11 +2,10 @@ import { ActionFunctionArgs, LoaderFunction, redirect } from "@remix-run/cloudfl
 import { useLoaderData } from "@remix-run/react";
 import BillingForm from "~/components/BillingForm";
 import NotSignedIn from "~/components/NotSignedIn";
-import axios from "~/config/axiosConfig";
 import { useToastError } from "~/hooks/useToastError";
 import { handleError } from "~/lib/handleError";
 import { ProfileSchema } from "~/lib/zodValidationSchema";
-import { CurrentUser, EnvType } from "~/types/types";
+import { EnvType, CurrentUser } from "~/types/types";
 import type { MetaFunction } from "@remix-run/cloudflare";
 
 export const meta: MetaFunction = () => {
@@ -16,14 +15,21 @@ export const meta: MetaFunction = () => {
 export const loader: LoaderFunction = async ({ request, context }) => {
   const { HOST } = context.cloudflare.env as EnvType;
   try {
-    const response = await axios.get(`${HOST}/api/users/user`, {
+    const response = await fetch(`${HOST}/api/users/user`, {
+      method: "GET",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
     });
-    return { currentUser: response.data };
-  } catch (error: any) {
-    return handleError(error, { currentUser: null });
+    const userData = (await response.json()) as any;
+    if (!response.ok) {
+      return handleError(userData, response, { currentUser: null });
+    }
+    return { currentUser: userData };
+  } catch (error) {
+    console.log("Error:", error);
+    return handleError(error, false, { currentUser: null });
   }
 };
 
@@ -41,20 +47,27 @@ export async function action({ request, context }: ActionFunctionArgs) {
   }
 
   try {
-    const response = await axios.put(`${HOST}/api/users/update`, bodyObject, {
+    const response = await fetch(`${HOST}/api/users/update`, {
+      method: "PUT",
       headers: {
-        Cookie: request.headers.get("Cookie"),
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("Cookie") || "",
       },
+      body: JSON.stringify(bodyObject),
     });
-    console.log("Response:", response.data);
-    return redirect("/tickets");
-  } catch (error: any) {
-    return handleError(error);
+    const userData = (await response.json()) as any;
+    if (!response.ok) {
+      return handleError(userData, response);
+    }
+    return redirect("/");
+  } catch (error) {
+    console.log("Error:", error);
+    return handleError(error, false);
   }
 }
 
 const EditProfileRoute = () => {
-  const data = useLoaderData<{ currentUser: CurrentUser | null }>();
+  const data = useLoaderData<CurrentUser>();
 
   useToastError(data);
 

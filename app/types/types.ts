@@ -1,12 +1,12 @@
-export interface OutletContext {
+export interface CurrentUser {
   currentUser: { id: string; email: string; iat: number } | null;
 }
 
-export type CurrentUser = {
-  id: string;
-  email: string;
-  iat: number;
-};
+// export type CurrentUser = {
+//   id: string;
+//   email: string;
+//   iat: number;
+// };
 
 export type TicketResult = {
   title: string;

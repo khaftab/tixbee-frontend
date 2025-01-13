@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Link } from "@remix-run/react";
+import { Link, useFetcher } from "@remix-run/react";
 import {
   Sheet,
   SheetTrigger,
@@ -18,10 +18,11 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Menu } from "lucide-react";
-import { OutletContext } from "~/types/types";
+import { CurrentUser } from "~/types/types";
 import TicketLogo from "~/components/TicketLogoWithBg";
 import { ModeToggle } from "~/components/ModeToggle";
 import { useLocation } from "@remix-run/react";
+import { useToastError } from "~/hooks/useToastError";
 
 const NAVIGATION_ITEMS = [
   { path: "/", label: "Home" },
@@ -37,7 +38,6 @@ const USER_MENU_ITEMS = [
 const NavigationLink = ({
   to,
   children,
-  className,
 }: {
   to: string;
   children: React.ReactNode;
@@ -68,62 +68,72 @@ const UserAvatar = ({ email }: { email: string }) => (
   </div>
 );
 
-interface DropDownProps extends OutletContext {
-  // currentUser: User | null
+interface DropDownProps extends CurrentUser {
   isMobile: boolean;
 }
 
-const UserDropdownMenu = ({ currentUser, isMobile }: DropDownProps) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger className="outline-none">
-      <div className="cursor-pointer">
-        <UserAvatar email={currentUser!.email} />
-      </div>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent side="bottom" align={isMobile ? "start" : "end"} className="bg-background">
-      <DropdownMenuLabel className="font-light font-inter-medium">My Account</DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      {isMobile
-        ? USER_MENU_ITEMS.map(({ path, label }) => (
-            <SheetClose asChild>
+const UserDropdownMenu = ({ currentUser, isMobile }: DropDownProps) => {
+  const fetcher = useFetcher();
+  const handleLogout = async () => {
+    fetcher.submit(null, {
+      method: "post",
+      action: "/signout",
+    });
+  };
+  useToastError(fetcher.data);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="outline-none">
+        <div className="cursor-pointer">
+          <UserAvatar email={currentUser!.email} />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        side="bottom"
+        align={isMobile ? "start" : "end"}
+        className="bg-background"
+      >
+        <DropdownMenuLabel className="font-light font-inter-medium">My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {isMobile
+          ? USER_MENU_ITEMS.map(({ path, label }) => (
+              <SheetClose asChild>
+                <Link key={path} to={path}>
+                  <DropdownMenuItem className="hover:cursor-pointer font-inter-light font-light focus:bg-accent/50">
+                    {label}
+                  </DropdownMenuItem>
+                </Link>
+              </SheetClose>
+            ))
+          : USER_MENU_ITEMS.map(({ path, label }) => (
               <Link key={path} to={path}>
                 <DropdownMenuItem className="hover:cursor-pointer font-inter-light font-light focus:bg-accent/50">
                   {label}
                 </DropdownMenuItem>
               </Link>
-            </SheetClose>
-          ))
-        : USER_MENU_ITEMS.map(({ path, label }) => (
-            <Link key={path} to={path}>
-              <DropdownMenuItem className="hover:cursor-pointer font-inter-light font-light focus:bg-accent/50">
-                {label}
-              </DropdownMenuItem>
-            </Link>
-          ))}
-      {isMobile ? (
-        <SheetClose asChild>
-          <div className="ml-2 my-2">
-            <Form method="post" action="/signout">
-              <Button variant="destructive" size="sm" type="submit">
+            ))}
+        {isMobile ? (
+          <SheetClose asChild>
+            <div className="ml-2 my-2">
+              <Button variant="destructive" size="sm" type="submit" onClick={handleLogout}>
                 Logout
               </Button>
-            </Form>
-          </div>
-        </SheetClose>
-      ) : (
-        <div className="ml-2 my-2">
-          <Form method="post" action="/signout">
-            <Button variant="destructive" size="sm" type="submit">
+            </div>
+          </SheetClose>
+        ) : (
+          <div className="ml-2 my-2">
+            <Button variant="destructive" size="sm" type="submit" onClick={handleLogout}>
               Logout
             </Button>
-          </Form>
-        </div>
-      )}
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+          </div>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
-const MobileMenu = ({ currentUser }: OutletContext) => (
+const MobileMenu = ({ currentUser }: CurrentUser) => (
   <Sheet>
     <div className="flex items-center md:hidden">
       <SheetTrigger asChild>
@@ -170,7 +180,7 @@ const MobileMenu = ({ currentUser }: OutletContext) => (
   </Sheet>
 );
 
-export default function Header({ currentUser }: OutletContext) {
+export default function Header({ currentUser }: CurrentUser) {
   const location = useLocation();
   const width = location.pathname === "/tickets/" ? "max-w-5xl" : "max-w-5xl";
 
