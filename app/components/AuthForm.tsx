@@ -32,7 +32,6 @@ export default function AuthForm({ isSigninPage }: AuthFormProps) {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formdata = new FormData();
-    console.log(values);
     formdata.append("email", values.email);
     formdata.append("password", values.password);
 

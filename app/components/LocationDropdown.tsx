@@ -13,9 +13,6 @@ const LocationDropdown = () => {
     setCountries(Country.getAllCountries());
   }, []);
 
-  console.log("countries:", countries);
-  console.log("states:", states);
-
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const countryCode = e.target.value;
     setSelectedCountry(countryCode);

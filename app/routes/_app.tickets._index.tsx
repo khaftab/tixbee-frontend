@@ -43,7 +43,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       page,
     };
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false, { tickets: [], totalTickets: 0, page });
   }
 }
@@ -54,7 +53,6 @@ export default function TicketsRoute() {
   const { tickets, totalTickets, page } = data;
   const navigation = useNavigation();
 
-  console.log("tickets", tickets);
   const filterList = {
     mytickets: "My Tickets",
     all: "All Tickets",

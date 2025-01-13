@@ -28,7 +28,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     }
     return { currentUser: userData };
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false, { currentUser: null });
   }
 };
@@ -61,7 +60,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
     return redirect("/");
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false);
   }
 }

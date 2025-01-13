@@ -39,7 +39,6 @@ export const loader: LoaderFunction = async ({ request, params, context }) => {
     }
     return { order: orderData, user: userData };
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false, { order: null, user: null });
   }
 };
@@ -76,26 +75,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
       country,
     };
   }
-
-  // try {
-  //   const response = await axios.post(
-  //     `${HOST}/api/payments`,
-  //     {
-  //       token,
-  //       orderId,
-  //       billingInfo,
-  //     },
-  //     {
-  //       headers: {
-  //         Cookie: request.headers.get("Cookie"),
-  //       },
-  //     }
-  //   );
-  //   console.log(response.data);
-  //   return response.data;
-  // } catch (error: any) {
-  //   return handleError(error, { order: null, user: null });
-  // }
 
   try {
     const response = await fetch(`${HOST}/api/payments`, {

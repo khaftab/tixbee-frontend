@@ -27,7 +27,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
       },
     });
   } catch (error) {
-    console.log("Error:", error);
     handleError(error, false);
   }
   return null;

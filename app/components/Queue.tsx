@@ -73,7 +73,6 @@ export default function TicketQueue({ HOST, ticketId, cookie }: TicketQueueProps
 
       setTimeLeft(remaining);
       setProgress(progress + progressPercent);
-      console.log(progress, progressPercent, progress + progressPercent);
 
       if (remaining === 0) {
         clearInterval(interval);

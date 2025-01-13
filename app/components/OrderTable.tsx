@@ -15,7 +15,6 @@ import { Download, SquareArrowOutUpRight } from "lucide-react";
 import { generateCloudinaryUrl } from "~/lib/utils";
 
 const OrderTable = ({ orders }: { orders: OrderData[] }) => {
-  console.log(orders);
   return (
     <div className="overflow-x-auto">
       <Table>

@@ -120,7 +120,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
       }
       return redirect(`/tickets/${bodyObject.id}`);
     } catch (error) {
-      console.log(error);
       return handleError(error, false);
     }
   } else if (request.method === "POST") {
@@ -139,7 +138,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
       }
       return redirect(`/tickets`);
     } catch (error) {
-      console.log(error);
       return handleError(error);
     }
   }

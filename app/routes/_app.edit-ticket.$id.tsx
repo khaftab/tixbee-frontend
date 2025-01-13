@@ -28,7 +28,6 @@ export const loader: LoaderFunction = async ({ request, params, context }) => {
     }
     return { ticket: ticketData };
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false, { ticket: null });
   }
 };

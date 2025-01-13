@@ -4,8 +4,6 @@ import { EnvType } from "~/types/types";
 
 export async function action({ request, context }: ActionFunctionArgs) {
   if (request.method === "PUT") {
-    console.log("PUT request received");
-
     return jsonResponse({ public_id: null, context: null, status: 201 }, 201);
   }
   const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } = context.cloudflare.env as EnvType;

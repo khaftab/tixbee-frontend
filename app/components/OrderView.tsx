@@ -15,8 +15,6 @@ type OrderViewProps = {
 };
 
 const OrderView = ({ order, user }: OrderViewProps) => {
-  console.log("order", order.expiresAt);
-
   const calculateTimeLeft = useCallback(() => {
     const difference = new Date(order.expiresAt).getTime() - new Date().getTime();
     return Math.max(0, Math.floor(difference / 1000));

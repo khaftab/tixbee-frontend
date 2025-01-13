@@ -98,7 +98,6 @@ const SortAndFilter = ({ filterList, context, className }: SortAndFilterProps) =
   };
 
   const selectedOption = CategoryList.find((option) => option.value === category);
-  console.log(filterBy, "hkaa");
   // border-gray-300 dark:border-muted-foreground
   return (
     <div className={`${className}`}>

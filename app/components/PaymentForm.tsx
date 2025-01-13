@@ -56,7 +56,6 @@ export default function PaymentForm({ hasBillingAddress, orderId, user }: Paymen
     const run = async () => {
       // Step 3: Handle potential 3D Secure authentication
       if (fetcher.data) {
-        console.log(fetcher.data);
         if (!stripe || !elements) return;
         if (fetcher.data.requiresAction) {
           const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
@@ -108,7 +107,6 @@ export default function PaymentForm({ hasBillingAddress, orderId, user }: Paymen
         });
         setProcessing(false);
       } else {
-        console.log("PaymentMethod", paymentMethod);
         fetcher.submit(
           {
             token: paymentMethod.id,

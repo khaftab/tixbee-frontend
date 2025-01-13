@@ -10,7 +10,6 @@ import { useToastError } from "~/hooks/useToastError";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const { HOST } = context.cloudflare.env as EnvType;
-  console.log("from _app.tsx", HOST);
 
   try {
     const response = await fetch(`${HOST}/api/users/currentuser`, {
@@ -32,7 +31,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 export default function SomeParent() {
   const data = useLoaderData<CurrentUser>();
   useToastError(data);
-  console.log("from _app.tsx", data);
 
   return (
     <div className="relative min-h-screen">

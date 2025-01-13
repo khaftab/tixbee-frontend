@@ -33,7 +33,6 @@ export const loader: LoaderFunction = async ({ request, params, context }) => {
     }
     return { ticket: ticketData };
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false, { ticket: null });
   }
 };
@@ -65,7 +64,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
     return redirect(`/orders/${ticketData.id}`);
   } catch (error) {
-    console.log("Error:", error);
     return handleError(error, false);
   }
 }
