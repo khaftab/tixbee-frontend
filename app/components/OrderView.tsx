@@ -2,12 +2,11 @@ import { OrderResult, User } from "~/types/types";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardFooter, CardTitle } from "~/components/ui/card";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MoveLeft } from "lucide-react";
 import { Link, useNavigate } from "@remix-run/react";
 import StripeWrapper from "./StripeWrapper";
 import PaymentForm from "./PaymentForm";
-import { toast } from "~/hooks/use-toast";
 
 type OrderViewProps = {
   order: OrderResult;
@@ -15,29 +14,17 @@ type OrderViewProps = {
 };
 
 const OrderView = ({ order, user }: OrderViewProps) => {
-  // const calculateTimeLeft = useCallback(() => {
-  //   const difference = new Date(order.expiresAt).getTime() - new Date().getTime();
-  //   const correctedNow = new Date(new Date().getTime() + difference);
-  //   const dif = new Date(order.expiresAt).getTime() - correctedNow.getTime();
-  //   return Math.max(0, Math.floor(difference / 1000));
-  // }, [order]);
-  const initialDiff = useRef<number | null>(null);
-  const initialTime = useRef(Date.now());
+  const timeDiff = new Date().getTime() - new Date(order.serverTime).getTime();
 
   const calculateTimeLeft = useCallback(() => {
-    if (initialDiff.current === null) {
-      initialDiff.current = new Date(order.expiresAt).getTime() - Date.now();
-    }
-
-    // Calculate remaining time based on elapsed time since component mount
-    const elapsedTime = Date.now() - initialTime.current;
-    const remainingTime = initialDiff.current - elapsedTime;
-
-    return Math.max(0, Math.floor(remainingTime / 1000));
-  }, [order.expiresAt]);
+    let difference = new Date(order.expiresAt).getTime() - new Date().getTime();
+    difference = difference + timeDiff;
+    return Math.max(0, Math.floor(difference / 1000));
+  }, [order]);
 
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
+
   useEffect(() => {
     if (order.status === "complete") {
       navigate("/view-orders");

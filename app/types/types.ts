@@ -27,6 +27,7 @@ export type OrderResult = {
   userId: string;
   status: string;
   expiresAt: string;
+  serverTime: string;
   ticket: {
     title: string;
     price: number;
