@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunction, redirect } from "@remix-run/cloudflare";
+import { ActionFunctionArgs, LoaderFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import BillingForm from "~/components/BillingForm";
 import NotSignedIn from "~/components/NotSignedIn";
@@ -7,6 +7,7 @@ import { handleError } from "~/lib/handleError";
 import { ProfileSchema } from "~/lib/zodValidationSchema";
 import { EnvType, CurrentUser } from "~/types/types";
 import type { MetaFunction } from "@remix-run/cloudflare";
+import { jsonResponse } from "~/lib/utils";
 
 export const meta: MetaFunction = () => {
   return [{ title: "TixBee - Billing address" }];
@@ -58,7 +59,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     if (!response.ok) {
       return handleError(userData, response);
     }
-    return redirect("/");
+    return jsonResponse({ success: true });
   } catch (error) {
     return handleError(error, false);
   }

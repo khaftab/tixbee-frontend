@@ -5,10 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { User } from "~/types/types";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useNavigate } from "@remix-run/react";
 import { Form } from "./ui/form";
 import { Button } from "./ui/button";
-import { ErrorType, useToastError } from "~/hooks/useToastError";
+import { useToastError } from "~/hooks/useToastError";
 import { useEffect, useState } from "react";
 import { City, Country, ICity, ICountry, IState, State } from "@kh-micro-srv/country-state-city";
 import CustomSelect from "./CustomSelect";
@@ -17,6 +17,13 @@ const BillingForm = ({ user }: { user: User }) => {
   const [countries, setCountries] = useState<ICountry[]>([]);
   const [states, setStates] = useState<IState[]>([]);
   const [cities, setCities] = useState<ICity[]>([]);
+  const fetcher = useFetcher<any>();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      navigate(-1);
+    }
+  }, [fetcher.data]);
 
   useEffect(() => {
     setCountries(Country.getAllCountries());
@@ -44,8 +51,6 @@ const BillingForm = ({ user }: { user: User }) => {
     await form.trigger("state");
   };
 
-  const fetcher = useFetcher<ErrorType | null | undefined>();
-
   useToastError(fetcher.data);
 
   const onSubmit = (data: z.infer<typeof ProfileSchema>) => {
@@ -56,7 +61,6 @@ const BillingForm = ({ user }: { user: User }) => {
     formdata.append("city", data.city);
     formdata.append("state", data.state);
     formdata.append("country", data.country);
-
     fetcher.submit(formdata, {
       method: "post",
       action: "/billing-address",

@@ -6,15 +6,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useRevalidator } from "@remix-run/react";
 
 export function ModeToggle() {
   const systemTheme = "light";
-
+  const revalidator = useRevalidator();
+  const updateMetaAndRevalidate = (color: string) => {
+    // First update meta immediately for quick feedback
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", color);
+    }
+    revalidator.revalidate();
+  };
+  // revalidate re runs the loader function hence cause little flicker / lag.
   const handleClick = (theme: string) => {
     document.cookie = `theme=${theme}; path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax; Secure`;
 
     document.documentElement.setAttribute("data-theme", theme);
-
+    updateMetaAndRevalidate(theme === "dark" ? "#000000" : "#ffffff");
     // Add a temporary stylesheet for transitions
     const style = document.createElement("style");
     style.innerHTML = `
